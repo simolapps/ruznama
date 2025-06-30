@@ -1,19 +1,33 @@
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../model/prayer_time.dart';
 
 class PrayerRepository {
-  final http.Client client;
-  PrayerRepository(this.client);
+  final http.Client _client;
+  PrayerRepository(this._client);
 
+  /// вернуть все времена на месяц вперёд
+  Future<List<PrayerTime>> fetchMonth(int cityId) async {
+    final uri = Uri.parse(
+      'https://simolapps.ru/api/namaz/get_times.php?city_id=$cityId',
+    );
+    final res = await _client.get(uri);
+    if (res.statusCode != 200) {
+      throw Exception('Ошибка сети ${res.statusCode}');
+    }
+    final list = jsonDecode(res.body) as List;
+    return list.map((j) => PrayerTime.fromJson(j)).toList();
+  }
+
+  /// вернуть конкретный день (если API только «месяц»)
   Future<PrayerTime> fetchDay(int cityId, DateTime date) async {
-    // Dummy data for demo purposes
-    return PrayerTime(
-      morning: '05:00',
-      sunrise: '06:30',
-      noon: '12:00',
-      afternoon: '15:30',
-      sunset: '18:45',
-      night: '20:00',
+    final month = await fetchMonth(cityId);
+    final key   = '${date.year.toString().padLeft(4, '0')}-'
+                  '${date.month.toString().padLeft(2, '0')}-'
+                  '${date.day.toString().padLeft(2, '0')}';
+    return month.firstWhere(
+      (p) => p.date == key,
+      orElse: () => throw Exception('Нет данных на $key'),
     );
   }
 }

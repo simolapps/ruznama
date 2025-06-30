@@ -7,15 +7,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:ruznama/data/app_database.dart';
+
+import 'package:ruznama/model/task.dart';
 import 'package:ruznama/widgets/calendar_header.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timelines_plus/timelines_plus.dart';
 
 import '../data/city_repository.dart';
 import '../data/prayer_repository.dart';
-import '../model/prayer_time.dart';
-import '../model/task.dart';
-import '../model/city.dart';
+
+
 
 
 class TodoScreen extends StatefulWidget {
@@ -77,7 +79,8 @@ class _TodoScreenState extends State<TodoScreen> {
     final sp = await SharedPreferences.getInstance();
     final id = sp.getInt('city_id');
     final name = sp.getString('city_name');
-    if (id != null) _city = City(id: id, name: name ?? 'City $id');
+    if (id != null) _city = City(id: id, name: name ?? 'City $id', selected: false);
+
 
     await _loadTasks();
     await _ensurePrayerMonth(_day); // ← ЭТОТ метод должен быть тут в этом классе
@@ -93,7 +96,7 @@ class _TodoScreenState extends State<TodoScreen> {
       setState(() => _loading = true);
       for (int d = 0; d < days; d++) {
         final date = first.add(Duration(days: d));
-        _prayerCache[date] = await _repo.fetchDay(_city!.id, date);
+        _prayerCache[date] = (await _repo.fetchDay(_city!.id, date)) as PrayerTime;
       }
       setState(() => _loading = false);
     }
@@ -118,7 +121,7 @@ class _TodoScreenState extends State<TodoScreen> {
   // ─── Prayer loading ────────────────────────────────────────────────────
   Future<void> _ensurePrayerDay(DateTime d) async {
     if (_city == null || _prayerCache.containsKey(d)) return;
-    _prayerCache[d] = await _repo.fetchDay(_city!.id, d);
+    _prayerCache[d] = (await _repo.fetchDay(_city!.id, d)) as PrayerTime;
   }
 
   void _loadMonthInBackground(DateTime anyDay) {
@@ -135,7 +138,7 @@ class _TodoScreenState extends State<TodoScreen> {
     Future.wait(List.generate(daysInMonth, (i) async {
       final date = first.add(Duration(days: i));
       if (!_prayerCache.containsKey(date)) {
-        _prayerCache[date] = await _repo.fetchDay(_city!.id, date);
+        _prayerCache[date] = (await _repo.fetchDay(_city!.id, date)) as PrayerTime;
         if (mounted) setState(() {}); // обновлять кружки по мере прихода
       }
     }));
