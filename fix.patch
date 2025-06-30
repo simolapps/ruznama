@@ -1,10 +1,89 @@
-diff --git a/lib/model/city.dart
-index 0000000000000000000000000000000000000000..826525a43ef4bf5805b79df1cd0faf3eab9b07fe 100644
---- a/lib/model/city.dart
-+++ b/lib/model/city.dart
-@@ -0,0 +1,5 @@
-+class City {
-+  final int id;
-+  final String name;
-+  City({required this.id, required this.name});
+diff --git a/lib/model/task.dart b/lib/model/task.dart
+index d3a383a10d43d0f02aa54dd7e727a8f3d69594bc..63b68dd28c74a43821f3bcde5a9aae8b93402a92 100644
+--- a/lib/model/task.dart
++++ b/lib/model/task.dart
+@@ -1,49 +1,40 @@
++import 'dart:convert';
+ import 'package:flutter/material.dart';
+-import 'package:intl/intl.dart';
+ 
+-class CalendarHeader extends StatelessWidget {
+-  final DateTime selectedDay;
+-  final ValueChanged<DateTime> onSelectDay;
+-  final Map<DateTime, int> completedPrayers;
+-  final Map<DateTime, int> completedTasks;
+-  final Map<DateTime, int> totalTasks;
++class Task {
++  String title;
++  DateTime time;
++  Color color;
++  String? note;
++  bool done;
+ 
+-  const CalendarHeader({
+-    super.key,
+-    required this.selectedDay,
+-    required this.onSelectDay,
+-    required this.completedPrayers,
+-    required this.completedTasks,
+-    required this.totalTasks,
++  Task({
++    required this.title,
++    required this.time,
++    this.color = Colors.blue,
++    this.note,
++    this.done = false,
+   });
+ 
+-  @override
+-  Widget build(BuildContext context) {
+-    return Container(
+-      color: Colors.black,
+-      padding: const EdgeInsets.all(16),
+-      child: Row(
+-        children: [
+-          IconButton(
+-            icon: const Icon(Icons.chevron_left, color: Colors.white),
+-            onPressed: () =>
+-                onSelectDay(selectedDay.subtract(const Duration(days: 1))),
+-          ),
+-          Expanded(
+-            child: Center(
+-              child: Text(
+-                DateFormat.yMMMd().format(selectedDay),
+-                style: const TextStyle(color: Colors.white),
+-              ),
+-            ),
+-          ),
+-          IconButton(
+-            icon: const Icon(Icons.chevron_right, color: Colors.white),
+-            onPressed: () =>
+-                onSelectDay(selectedDay.add(const Duration(days: 1))),
+-          ),
+-        ],
+-      ),
+-    );
+-  }
+-}
++  Map<String, dynamic> toMap() => {
++        'title': title,
++        'time': time.toIso8601String(),
++        'color': color.value,
++        'note': note,
++        'done': done,
++      };
++
++  factory Task.fromMap(Map<String, dynamic> map) => Task(
++        title: map['title'] as String,
++        time: DateTime.parse(map['time'] as String),
++        color: Color(map['color'] as int),
++        note: map['note'] as String?,
++        done: map['done'] as bool? ?? false,
++      );
++
++  static List<String> encode(List<Task> tasks) =>
++      tasks.map((t) => json.encode(t.toMap())).toList();
++
++  static List<Task> decode(List<String> data) =>
++      data.map((e) => Task.fromMap(json.decode(e) as Map<String, dynamic>)).toList();
 +}

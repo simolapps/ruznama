@@ -1,49 +1,48 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
-class CalendarHeader extends StatelessWidget {
-  final DateTime selectedDay;
-  final ValueChanged<DateTime> onSelectDay;
-  final Map<DateTime, int> completedPrayers;
-  final Map<DateTime, int> completedTasks;
-  final Map<DateTime, int> totalTasks;
+class Task {
+  String title;
+  DateTime time;
+  Color color;
+  bool done;
+  String? note;
 
-  const CalendarHeader({
-    super.key,
-    required this.selectedDay,
-    required this.onSelectDay,
-    required this.completedPrayers,
-    required this.completedTasks,
-    required this.totalTasks,
+  Task({
+    required this.title,
+    required this.time,
+    this.color = Colors.blue,
+    this.done = false,
+    this.note,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left, color: Colors.white),
-            onPressed: () =>
-                onSelectDay(selectedDay.subtract(const Duration(days: 1))),
-          ),
-          Expanded(
-            child: Center(
-              child: Text(
-                DateFormat.yMMMd().format(selectedDay),
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right, color: Colors.white),
-            onPressed: () =>
-                onSelectDay(selectedDay.add(const Duration(days: 1))),
-          ),
-        ],
-      ),
+  factory Task.fromMap(Map<String, dynamic> map) {
+    return Task(
+      title: map['title'] as String,
+      time: DateTime.parse(map['time'] as String),
+      color: Color(map['color'] as int),
+      done: map['done'] as bool? ?? false,
+      note: map['note'] as String?,
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'time': time.toIso8601String(),
+      'color': color.value,
+      'done': done,
+      'note': note,
+    };
+  }
+
+  static List<String> encode(List<Task> tasks) {
+    return tasks.map((t) => json.encode(t.toMap())).toList();
+  }
+
+  static List<Task> decode(List<String> tasks) {
+    return tasks
+        .map((s) => Task.fromMap(json.decode(s) as Map<String, dynamic>))
+        .toList();
   }
 }
