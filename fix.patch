@@ -1,0 +1,10 @@
+diff --git a/lib/model/city.dart
+index 0000000000000000000000000000000000000000..826525a43ef4bf5805b79df1cd0faf3eab9b07fe 100644
+--- a/lib/model/city.dart
++++ b/lib/model/city.dart
+@@ -0,0 +1,5 @@
++class City {
++  final int id;
++  final String name;
++  City({required this.id, required this.name});
++}
